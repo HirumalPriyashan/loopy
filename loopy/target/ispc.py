@@ -93,7 +93,9 @@ class ExprToISPCExprMapper(ExpressionToCExpressionMapper):
             # FIXME: This is a pretty coarse way of deciding what
             # private temporaries get duplicated. Refine? (See also
             # below in decl generation)
-            gsize, lsize = self.kernel.get_grid_size_upper_bounds_as_exprs()
+            gsize, lsize = self.kernel.get_grid_size_upper_bounds_as_exprs(
+                self.codegen_state.callables_table
+            )
             if lsize:
                 return expr[var("programIndex")]
             else:
@@ -112,7 +114,9 @@ class ExprToISPCExprMapper(ExpressionToCExpressionMapper):
                 and ary.address_space == AddressSpace.PRIVATE):
             # generate access code for acccess to private-index temporaries
 
-            gsize, lsize = self.kernel.get_grid_size_upper_bounds_as_exprs()
+            gsize, lsize = self.kernel.get_grid_size_upper_bounds_as_exprs(
+                self.codegen_state.callables_table
+            )
             if lsize:
                 lsize, = lsize
                 from loopy.kernel.array import get_access_info
@@ -331,7 +335,9 @@ class ISPCASTBuilder(CFamilyASTBuilder):
     def get_temporary_var_declarator(self,
             codegen_state: CodeGenerationState,
             temp_var: TemporaryVariable) -> Declarator:
-        temp_var_decl = self.get_array_base_declarator(temp_var)
+        from cgen.ispc import ISPCUniform
+
+        temp_var_decl = ISPCUniform(self.get_array_base_declarator(temp_var))
 
         shape = temp_var.shape
 
